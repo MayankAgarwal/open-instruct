@@ -462,6 +462,7 @@ def main(args: FlatArguments):
             tc,
             args.max_seq_length,
             args.hf_entity,
+            push_to_hub=args.push_to_hub        # fork_change
         )
         train_dataset = train_dataset.shuffle(seed=args.seed)
         train_dataset.set_format(type="pt")

@@ -793,7 +793,7 @@ class DatasetTransformationCache:
         config_str = json.dumps(combined_dict, sort_keys=True)
         return hashlib.sha256(config_str.encode()).hexdigest()[:10]
 
-    def load_or_transform_dataset(self, dcs: List[DatasetConfig], tc: TokenizerConfig) -> Dataset:
+    def load_or_transform_dataset(self, dcs: List[DatasetConfig], tc: TokenizerConfig, push_to_hub: bool = True) -> Dataset:
         """Load dataset from cache if it exists, otherwise transform and cache it."""
         config_hash = self.compute_config_hash(dcs, tc)
         repo_name = f"{self.hf_entity}/dataset-mix-cached"
@@ -814,6 +814,10 @@ class DatasetTransformationCache:
 
         # Combine datasets
         combined_dataset = concatenate_datasets(transformed_datasets)
+
+        # Return dataset object without pushing to HF hub
+        if not push_to_hub:
+            return combined_dataset
 
         # Push to hub with config hash as revision
         combined_dataset.push_to_hub(
@@ -856,9 +860,9 @@ This is a cached dataset produced by https://github.com/allenai/open-instruct
         return load_dataset(repo_name, split=dc.dataset_split, revision=config_hash)
 
 
-def get_cached_dataset(dcs: List[DatasetConfig], tc: TokenizerConfig, hf_entity: Optional[str] = None) -> Dataset:
+def get_cached_dataset(dcs: List[DatasetConfig], tc: TokenizerConfig, hf_entity: Optional[str] = None, push_to_hub: bool = True) -> Dataset:
     cache = DatasetTransformationCache(hf_entity=hf_entity)
-    return cache.load_or_transform_dataset(dcs, tc)
+    return cache.load_or_transform_dataset(dcs, tc, push_to_hub=push_to_hub)
 
 
 def get_cached_dataset_tulu_sft(
@@ -866,6 +870,7 @@ def get_cached_dataset_tulu_sft(
     tc: TokenizerConfig,
     max_seq_length: int,
     hf_entity: Optional[str] = None,
+    push_to_hub: bool = True
 ) -> Dataset:
     dcs = []
     assert len(dataset_mixer_list) % 2 == 0, f"Data mixer list length is not even: {dataset_mixer_list}"
@@ -896,11 +901,11 @@ def get_cached_dataset_tulu_sft(
         dataset_config.update_range(new_range)
         dcs.append(dataset_config)
     cache = DatasetTransformationCache(hf_entity=hf_entity)
-    return cache.load_or_transform_dataset(dcs, tc)
+    return cache.load_or_transform_dataset(dcs, tc, push_to_hub=push_to_hub)
 
 
 def get_cached_dataset_tulu_preference(
-    dataset_mixer_list: List[str], tc: TokenizerConfig, max_seq_length: int, hf_entity: Optional[str] = None
+    dataset_mixer_list: List[str], tc: TokenizerConfig, max_seq_length: int, hf_entity: Optional[str] = None, push_to_hub: bool = True
 ) -> Dataset:
     dcs = []
     assert len(dataset_mixer_list) % 2 == 0, f"Data mixer list length is not even: {dataset_mixer_list}"
@@ -931,7 +936,7 @@ def get_cached_dataset_tulu_preference(
         dataset_config.update_range(new_range)
         dcs.append(dataset_config)
     cache = DatasetTransformationCache(hf_entity=hf_entity)
-    return cache.load_or_transform_dataset(dcs, tc)
+    return cache.load_or_transform_dataset(dcs, tc, push_to_hub=push_to_hub)
 
 
 def get_cached_dataset_rlvr(
@@ -941,6 +946,7 @@ def get_cached_dataset_rlvr(
     max_token_length: Optional[int] = None,
     max_prompt_token_length: Optional[int] = None,
     hf_entity: Optional[str] = None,
+    push_to_hub: bool = True
 ) -> Dataset:
     if len(dataset_mixer_list_splits) == 1:
         print("by default, we will use the same split for all datasets")
@@ -974,7 +980,7 @@ def get_cached_dataset_rlvr(
         dataset_config.update_range(new_range)
         dcs.append(dataset_config)
     cache = DatasetTransformationCache(hf_entity=hf_entity)
-    return cache.load_or_transform_dataset(dcs, tc)
+    return cache.load_or_transform_dataset(dcs, tc, push_to_hub=push_to_hub)
 
 
 def test_sft_dpo_same_tokenizer():
