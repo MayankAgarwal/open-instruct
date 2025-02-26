@@ -336,7 +336,7 @@ class FlatArguments:
     """Immediately exit after caching the dataset"""
     try_auto_save_to_beaker: bool = True
     """Whether to try to save the model to Beaker dataset `/output` after training"""
-    push_to_hub: bool = True
+    push_to_hub: bool = False       # fork_change: Change default value to False
     """Whether to upload the saved model to huggingface"""
     hf_entity: Optional[str] = None
     """The user or org name of the model repository from the Hugging Face Hub"""
@@ -346,9 +346,9 @@ class FlatArguments:
     """The revision of the saved model in the Hugging Face Hub (can be autoset if not given)"""
     hf_repo_url: Optional[str] = None
     """The url of the saved model in the Hugging Face Hub (will be autoset)"""
-    try_launch_beaker_eval_jobs: bool = True
+    try_launch_beaker_eval_jobs: bool = False       # fork_change: Change default value to False
     """Whether to launch beaker evaluation jobs after training"""
-    hf_metadata_dataset: Optional[str] = "allenai/tulu-3-evals"
+    hf_metadata_dataset: Optional[str] = None       # fork_change: Change default value to None
     """What dataset to upload the metadata to. If unset, don't upload metadata"""
 
     def __post_init__(self):
